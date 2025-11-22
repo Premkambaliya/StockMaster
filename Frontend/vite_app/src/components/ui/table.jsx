@@ -12,9 +12,10 @@ export function TableBody({ children, className = '' }){
   return <tbody className={className}>{children}</tbody>
 }
 
-export function TableRow({ children, className = '' }){
-  return <tr className={className}>{children}</tr>
+export function TableRow({ children, className = '', ...props }) {
+  return <tr className={className} {...props}>{children}</tr>;
 }
+
 
 export function TableHead({ children, className = '' }){
   return <th className={className}>{children}</th>

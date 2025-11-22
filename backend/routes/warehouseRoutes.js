@@ -11,7 +11,7 @@ const router = express.Router();
 router.post("/create", createWarehouse);
 
 // GET ALL
-router.get("/all", getAllWarehouses);
+router.get("/", getAllWarehouses);
 
 // GET SINGLE
 router.get("/:id", getWarehouseById);

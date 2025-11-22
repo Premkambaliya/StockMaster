@@ -16,4 +16,7 @@ router.get("/all", getAllLocations);
 // GET SINGLE
 router.get("/:id", getLocationById);
 
+// router.delete("/:id", deleteLocation);
+
+
 export default router;

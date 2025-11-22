@@ -1,14 +1,19 @@
 import { WarehouseModel } from "../models/warehouseModel.js";
-
+import { getNextSequence } from "../utils/getNextSequence.js";
 // CREATE WAREHOUSE
 export const createWarehouse = async (req, res) => {
   try {
-    const { warehouseId, name, address } = req.body;
+    const { name, address, type } = req.body;
+
+    // 1️⃣ Generate safe warehouse ID (WH001, WH002, ...)
+    const seq = await getNextSequence("warehouse");
+    const warehouseId = `WH${String(seq).padStart(3, "0")}`;
 
     const warehouse = {
       warehouseId,
       name,
       address,
+      type,               // 👉 user-provided
       createdAt: new Date(),
     };
 
@@ -61,3 +66,4 @@ export const getWarehouseById = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+

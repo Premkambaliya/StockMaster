@@ -1,6 +1,6 @@
 import React from 'react'
 import './index.css'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import Dashboard from '@/pages/Dashboard'
 import Products from '@/pages/Products'
 import MoveHistory from '@/pages/MoveHistory'
@@ -9,6 +9,7 @@ import Deliveries from '@/pages/Deliveries'
 import Transfers from '@/pages/Transfers'
 import Adjustments from '@/pages/Adjustments'
 import Settings from '@/pages/Settings'
+import WarehouseDetails from '@/pages/WarehouseDetails'
 import Sidebar from '@/components/Sidebar'
 
 function App() {
@@ -18,7 +19,7 @@ function App() {
         <Sidebar />
         <main style={{flex:1,padding:'28px',background:'#f7fafc'}}>
           <Routes>
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/" element={<Settings />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/products" element={<Products />} />
             <Route path="/move-history" element={<MoveHistory />} />
@@ -27,6 +28,7 @@ function App() {
             <Route path="/transfers" element={<Transfers />} />
             <Route path="/adjustments" element={<Adjustments />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/warehouses/:warehouseId" element={<WarehouseDetails />} />
           </Routes>
         </main>
       </div>

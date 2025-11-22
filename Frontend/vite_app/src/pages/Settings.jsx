@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { listWarehouses, createWarehouse, updateWarehouse } from '@/api/warehouseApi';
+import { useNavigate } from 'react-router-dom';
 // import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useQuery, useMutation, useQueryClient } from '@/shims/react-query';
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,7 @@ import { Plus, Edit, Warehouse as WarehouseIcon } from '@/components/icons';
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Settings() {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingWarehouse, setEditingWarehouse] = useState(null);
@@ -28,11 +30,11 @@ export default function Settings() {
 
   const { data: warehouses = [], isLoading } = useQuery({
     queryKey: ['warehouses'],
-    queryFn: () => base44.entities.Warehouse.list('-updated_date'),
+    queryFn: () => listWarehouses(),
   });
 
   const createMutation = useMutation({
-    mutationFn: (data) => base44.entities.Warehouse.create(data),
+    mutationFn: (data) => createWarehouse(data),
     onSuccess: () => {
       queryClient.invalidateQueries(['warehouses']);
       setIsDialogOpen(false);
@@ -41,7 +43,7 @@ export default function Settings() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.Warehouse.update(id, data),
+    mutationFn: ({ id, data }) => updateWarehouse(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries(['warehouses']);
       setIsDialogOpen(false);
@@ -133,7 +135,16 @@ export default function Settings() {
                 </TableRow>
               ) : (
                 warehouses.map((warehouse) => (
-                  <TableRow key={warehouse.id} className="hover:bg-slate-50">
+  <TableRow
+  key={warehouse.warehouseId}     // 🔥 FIX HERE
+  className="hover:bg-slate-50 cursor-pointer"
+  onClick={() => {
+    const id = warehouse.warehouseId;     // 🔥 FIX HERE
+    navigate(`/warehouses/${id}`);
+    console.log("CLICK READY", warehouse.warehouseId)
+  }}
+>
+
                     <TableCell className="font-medium">{warehouse.name}</TableCell>
                     <TableCell className="font-mono text-sm">{warehouse.code}</TableCell>
                     <TableCell className="text-slate-600">{warehouse.location || '-'}</TableCell>
@@ -147,7 +158,11 @@ export default function Settings() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleEdit(warehouse)}
+                        onClick={(e) => {
+                          // prevent row click navigation when editing
+                          e.stopPropagation();
+                          handleEdit(warehouse);
+                        }}
                       >
                         <Edit className="w-4 h-4" />
                       </Button>
