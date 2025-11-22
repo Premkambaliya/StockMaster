@@ -45,9 +45,33 @@ export default function Deliveries() {
     queryFn: () => base44.entities.Warehouse.list(),
   });
 
+  const appendMoveHistory = (entries) => {
+    const prev = JSON.parse(localStorage.getItem('move_history') || '[]');
+    const next = [...entries, ...prev].slice(0, 500);
+    localStorage.setItem('move_history', JSON.stringify(next));
+  };
+
   const createMutation = useMutation({
     mutationFn: (data) => base44.entities.Delivery.create(data),
-    onSuccess: () => {
+    onSuccess: (created) => {
+      // Log draft move history entries so they show immediately
+      const draftEntries = (created.items || []).map((item) => ({
+        id: `${created.id}-${item.product_id}-${Math.random().toString(36).slice(2,8)}`,
+        operation_type: 'delivery',
+        reference_number: created.delivery_number,
+        product_id: item.product_id,
+        product_name: item.product_name,
+        sku: item.sku,
+        quantity: item.quantity,
+        unit: item.unit,
+        from_location: created.warehouse,
+        to_location: 'Customer',
+        operation_date: created.delivery_date,
+        performed_by: 'Current User',
+        status: 'draft',
+      }));
+      if (draftEntries.length) appendMoveHistory(draftEntries);
+
       queryClient.invalidateQueries(['deliveries']);
       setIsDialogOpen(false);
       resetForm();
@@ -64,23 +88,26 @@ export default function Deliveries() {
           await base44.entities.Product.update(product.id, {
             current_stock: Math.max(0, (product.current_stock || 0) - item.quantity),
           });
-          
-          await base44.entities.MoveHistory.create({
-            operation_type: 'delivery',
-            reference_number: delivery.delivery_number,
-            product_id: product.id,
-            product_name: product.name,
-            sku: product.sku,
-            quantity: item.quantity,
-            unit: product.unit_of_measure,
-            from_location: delivery.warehouse,
-            to_location: 'Customer',
-            operation_date: delivery.delivery_date,
-            performed_by: 'Current User',
-          });
         }
       }
+
+      const entries = (delivery.items || []).map((item) => ({
+        id: `${delivery.id}-${item.product_id}-${Math.random().toString(36).slice(2,8)}`,
+        operation_type: 'delivery',
+        reference_number: delivery.delivery_number,
+        product_id: item.product_id,
+        product_name: item.product_name,
+        sku: item.sku,
+        quantity: item.quantity,
+        unit: item.unit,
+        from_location: delivery.warehouse,
+        to_location: 'Customer',
+        operation_date: delivery.delivery_date,
+        performed_by: 'Current User',
+      }));
+      if (entries.length) appendMoveHistory(entries);
     },
+
     onSuccess: () => {
       queryClient.invalidateQueries(['deliveries']);
       queryClient.invalidateQueries(['products']);

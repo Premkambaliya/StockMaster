@@ -47,9 +47,33 @@ export default function Adjustments() {
     queryFn: () => base44.entities.Warehouse.list(),
   });
 
+  const appendMoveHistory = (entries) => {
+    const prev = JSON.parse(localStorage.getItem('move_history') || '[]');
+    const next = [...entries, ...prev].slice(0, 500);
+    localStorage.setItem('move_history', JSON.stringify(next));
+  };
+
   const createMutation = useMutation({
     mutationFn: (data) => base44.entities.Adjustment.create(data),
-    onSuccess: () => {
+    onSuccess: (created) => {
+      // Log draft move history entries so they show immediately
+      const draftEntries = (created.items || []).map((item) => ({
+        id: `${created.id}-${item.product_id}-${Math.random().toString(36).slice(2,8)}`,
+        operation_type: 'adjustment',
+        reference_number: created.adjustment_number,
+        product_id: item.product_id,
+        product_name: item.product_name,
+        sku: item.sku,
+        quantity: Math.abs(item.difference ?? 0),
+        unit: item.unit,
+        from_location: (item.difference ?? 0) < 0 ? created.warehouse : 'Adjustment',
+        to_location: (item.difference ?? 0) > 0 ? created.warehouse : 'Adjustment',
+        operation_date: created.adjustment_date,
+        performed_by: 'Current User',
+        status: 'draft',
+      }));
+      if (draftEntries.length) appendMoveHistory(draftEntries);
+
       queryClient.invalidateQueries(['adjustments']);
       setIsDialogOpen(false);
       resetForm();
@@ -67,22 +91,24 @@ export default function Adjustments() {
           await base44.entities.Product.update(product.id, {
             current_stock: newStock,
           });
-          
-          await base44.entities.MoveHistory.create({
-            operation_type: 'adjustment',
-            reference_number: adjustment.adjustment_number,
-            product_id: product.id,
-            product_name: product.name,
-            sku: product.sku,
-            quantity: Math.abs(item.difference),
-            unit: product.unit_of_measure,
-            from_location: item.difference < 0 ? adjustment.warehouse : 'Adjustment',
-            to_location: item.difference > 0 ? adjustment.warehouse : 'Adjustment',
-            operation_date: adjustment.adjustment_date,
-            performed_by: 'Current User',
-          });
         }
       }
+
+      const entries = (adjustment.items || []).map((item) => ({
+        id: `${adjustment.id}-${item.product_id}-${Math.random().toString(36).slice(2,8)}`,
+        operation_type: 'adjustment',
+        reference_number: adjustment.adjustment_number,
+        product_id: item.product_id,
+        product_name: item.product_name,
+        sku: item.sku,
+        quantity: Math.abs(item.difference ?? 0),
+        unit: item.unit,
+        from_location: (item.difference ?? 0) < 0 ? adjustment.warehouse : 'Adjustment',
+        to_location: (item.difference ?? 0) > 0 ? adjustment.warehouse : 'Adjustment',
+        operation_date: adjustment.adjustment_date,
+        performed_by: 'Current User',
+      }));
+      if (entries.length) appendMoveHistory(entries);
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['adjustments']);
