@@ -5,6 +5,7 @@ import warehouseRoutes from "./routes/warehouseRoutes.js";
 import locationRoutes from "./routes/locationRoutes.js";
 import categoryRoutes from "./routes/categoryRoutes.js";
 import productRoutes from "./routes/productRoutes.js";
+import stockRoutes from "./routes/stockRoutes.js";
 const app = express();
 
 app.use(cors());
@@ -15,4 +16,5 @@ app.use("/api/warehouses", warehouseRoutes);
 app.use("/api/locations", locationRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/products", productRoutes);
+app.use("/api/stock", stockRoutes);
 export default app;
