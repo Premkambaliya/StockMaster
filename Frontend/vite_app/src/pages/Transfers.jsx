@@ -109,6 +109,25 @@ export default function Transfers() {
       };
       const list = [newTransfer, ...transfers];
       saveTransfers(list);
+      // Append draft move history so it shows immediately in frontend
+      const draftEntries = (newTransfer.items || []).map(item => ({
+        id: `${newTransfer.id}-${item.product_id}-${Math.random().toString(36).slice(2,8)}`,
+        operation_type: 'transfer',
+        reference_number: newTransfer.transfer_number,
+        product_id: item.product_id,
+        product_name: item.product_name,
+        sku: item.sku,
+        quantity: item.quantity,
+        unit: item.unit,
+        from_location: newTransfer.from_location,
+        to_location: newTransfer.to_location,
+        operation_date: newTransfer.transfer_date,
+        performed_by: 'Current User',
+        status: 'draft',
+      }));
+      if (draftEntries.length) {
+        appendMoveHistory(draftEntries);
+      }
     }
     setIsDialogOpen(false);
     setEditId(null);
